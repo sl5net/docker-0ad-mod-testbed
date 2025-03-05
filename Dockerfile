@@ -5,11 +5,9 @@ ENV INSTALL_DIR="/opt/0ad"
 ENV USER_ID=1000
 ENV GROUP_ID=1000
 ENV USERNAME=0aduser
-ENV CONFIG_VOLUME="0ad-config"
-#Name des Docker Volumes
 
 #1. Aktualisieren und benötigte Pakete installieren.
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+RUN apt-get update && apt-get install -y \
   libasound2 \
   libdrm2 \
   libgbm1 \
@@ -22,6 +20,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   mesa-utils \
   libopenal1 \
   libsdl2-2.0-0 \
+  x11-xserver-utils \
   --no-install-recommends
 
 #2. Benutzer und Gruppe erstellen, und Benutzer zur Audio Gruppe hinzufügen
@@ -41,10 +40,6 @@ COPY 0ad-extracted $INSTALL_DIR
 RUN mkdir -p /home/$USERNAME/.config/0ad && \
     chown -R $USERNAME:$USERNAME /home/$USERNAME/.config/0ad
 
-#6. Standardkonfiguration in Volume kopieren
-RUN cp -r /opt/0ad/usr/data/config/* /home/$USERNAME/.config/0ad
-
+#6. Starte das Spiel als der Benutzer 0aduser
 WORKDIR $INSTALL_DIR
-
-#7. Starte das Spiel als der Benutzer 0aduser
-ENTRYPOINT ["gosu", "0aduser", "/opt/0ad/usr/bin/0ad", "-writableRoot", "-config", "/home/$USERNAME/.config/0ad"]
+ENTRYPOINT ["gosu", "0aduser", "/opt/0ad/usr/bin/0ad", "-writableRoot"]

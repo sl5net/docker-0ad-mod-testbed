@@ -16,5 +16,5 @@ docker run --rm -it \
     --device /dev/dri \
     --group-add video \
     -v "$(pwd)/0ad-extracted:/game" \
-    -v 0ad-config:/home/0aduser/.config/0ad \ #Mount volume
+    -v 0ad-config:/home/0aduser/.config/0ad \
     0ad
