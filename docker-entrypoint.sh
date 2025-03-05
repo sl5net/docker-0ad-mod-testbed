@@ -15,11 +15,11 @@ if [ ! -d "/var/0ad/config/0ad" ]; then
 fi
 
 # Copy default mods to volume if it is empty
-if [ ! -d "/var/0ad/mods/0ad" ]; then
+if [ ! -d "$MODS_VOLUME/public" ]; then
     echo "Copying default mods to volume"
-    mkdir -p /var/0ad/mods/0ad
-    cp -r /home/0aduser/.local/share/0ad/mods/* /var/0ad/mods/0ad/
+    mkdir -p "$MODS_VOLUME/public"
+    cp -r /game/usr/data/mods/* "$MODS_VOLUME/"
 fi
 
-# Starte 0 A.D.
-/game/usr/bin/0ad -writableRoot -config=/var/0ad/config -mod=/var/0ad/mods
+# Benutzer zum 0aduser wechseln und das Spiel starten
+exec su - 0aduser -c "/game/usr/bin/0ad -writableRoot -config=/var/0ad/config -mod=/var/0ad/mods"
