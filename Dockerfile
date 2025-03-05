@@ -6,10 +6,10 @@ ENV USER_ID=1000
 ENV GROUP_ID=1000
 ENV USERNAME=0aduser
 ENV CONFIG_VOLUME="0ad-config"
-# Name des Docker Volumes
+#Name des Docker Volumes
 
 #1. Aktualisieren und benötigte Pakete installieren.
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
   libasound2 \
   libdrm2 \
   libgbm1 \
@@ -34,14 +34,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certifi
     wget -qO /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-$(dpkg --print-architecture)" && \
     chmod +x /usr/local/bin/gosu
 
-#4. Konfigurationsverzeichnis erstellen und Berechtigungen setzen
+#4. Kopiere das gesamte extrahierte 0 A.D. Verzeichnis.
+COPY 0ad-extracted $INSTALL_DIR
+
+#5. Konfigurationsverzeichnis erstellen und Berechtigungen setzen
 RUN mkdir -p /home/$USERNAME/.config/0ad && \
     chown -R $USERNAME:$USERNAME /home/$USERNAME/.config/0ad
 
-#5. Kopiere das gesamte extrahierte 0 A.D. Verzeichnis.
-COPY 0ad-extracted $INSTALL_DIR
+#6. Standardkonfiguration in Volume kopieren
+RUN cp -r /opt/0ad/usr/data/config/* /home/$USERNAME/.config/0ad
 
 WORKDIR $INSTALL_DIR
 
-#6. Starte das Spiel als der Benutzer 0aduser
-ENTRYPOINT ["gosu", "0aduser", "/opt/0ad/usr/bin/0ad", "-writableRoot", "-config", "/home/0aduser/.config/0ad"]
+#7. Starte das Spiel als der Benutzer 0aduser
+ENTRYPOINT ["gosu", "0aduser", "/opt/0ad/usr/bin/0ad", "-writableRoot", "-config", "/home/$USERNAME/.config/0ad"]

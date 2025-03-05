@@ -1,25 +1,20 @@
 #!/bin/bash
-# Zeige DISPLAY Variable an
-echo "Display Variable: $DISPLAY"
 
-# Stelle sicher, dass die DISPLAY Variable gesetzt ist (falls nicht, versuche :0)
-if [ -z "$DISPLAY" ]; then
-  export DISPLAY=:0
-fi
+# Sicherheitshinweis: Besser eine restriktivere Regel verwenden
+xhost +local:docker
 
-# Copy default config to volume if it is empty
-if [ ! -d "/var/0ad/config/0ad" ]; then
-  echo "Copying default config to volume"
-  mkdir -p /var/0ad/config/0ad
-  cp -r /home/0aduser/.config/0ad/* /var/0ad/config/0ad/
-fi
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
-# Copy default mods to volume if it is empty
-if [ ! -d "$MODS_VOLUME/public" ]; then
-    echo "Copying default mods to volume"
-    mkdir -p "$MODS_VOLUME/public"
-    cp -r /game/usr/data/mods/* "$MODS_VOLUME/"
-fi
-
-# Benutzer zum 0aduser wechseln und das Spiel starten
-exec su - 0aduser -c "/game/usr/bin/0ad -writableRoot -config=/var/0ad/config -mod=/var/0ad/mods"
+docker run --rm -it \
+    -e DISPLAY="$DISPLAY" \
+    -e SDL_VIDEODRIVER=x11 \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+    --device /dev/snd \
+    -e PULSE_SERVER="unix:${XDG_RUNTIME_DIR}/pulse/native" \
+    -v "${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native" \
+    -e ALSA_PCM_NAME=default \
+    --device /dev/dri \
+    --group-add video \
+    -v "$(pwd)/0ad-extracted:/game" \
+    -v 0ad-config:/home/0aduser/.config/0ad \ #Mount volume
+    0ad
