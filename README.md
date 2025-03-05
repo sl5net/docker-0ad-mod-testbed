@@ -1,99 +1,52 @@
-2.  **0 A.D. AppImage herunterladen und extrahieren:**
+Okay, here is the `README.md` content in English:
 
-https://github.com/0ad-matters/0ad-appimage/releases
+```markdown
+# Docker 0 A.D. Mod Testbed
 
-    ```bash
-    ./0ad-0.27.0-linux-x86_64.AppImage --appimage-extract
-    mv squashfs-root 0ad-extracted
-    ```
+This project aims to provide an isolated and reproducible testing environment for developing mods for the open-source real-time strategy game 0 A.D.
 
-3.  **Docker Image (duration maybe 1 minute): **
+## Current Status
 
-    ```bash
-    docker build -t 0ad .
-    ```
+Currently, this project enables:
 
-4.  **Docker Container ausführen:**
+*   Running 0 A.D. inside a Docker container.
+*   Easily mounting the extracted 0 A.D. AppImage into the container.
+*   Using Docker Volumes for persistent storage of configuration data and mods (in the future).
 
-    Führe den Docker Container mit den folgenden Parametern aus:
+## Future Goals
 
-    ```bash
-    xhost +local:docker #Sicherheitshinweis: Besser eine restriktivere Regel verwenden
+The long-term goals of this project are:
 
-    docker run --rm -it \
-        -e DISPLAY=$DISPLAY \
-        --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-        --device /dev/snd \
-        -e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native \
-        -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native \
-        -e ALSA_PCM_NAME=default \
-        --device /dev/dri \
-        --group-add video \
-        -v $(pwd)/0ad-extracted:/game \
-        0ad
-    ```
+*   **Automated Testing:** To enable automated testing for mods, including GUI tests (e.g., using Selenium or Cypress).
+*   **Reproducible Builds:** To ensure that mods can be built in a consistent and reproducible environment.
+*   **Isolated Development:** To provide an isolated development environment where mod developers can make changes without affecting their host system.
+*   **Easy Deployment:** To simplify the deployment of mods for the 0 A.D. community.
+*   **CI/CD Integration:** To enable integration with CI/CD (Continuous Integration/Continuous Deployment) pipelines for automated testing and builds of mods.
+*   **Support for Different 0 A.D. Versions:** To support different 0 A.D. versions, allowing mods to be tested and developed for specific versions of the game.
+*   **User-Friendly Configuration:** To provide an easy way to configure the testing environment, such as through environment variables or configuration files.
 
-    **Erläuterung der `docker run`-Parameter:**
+## Usage
 
-    *   `--rm`:  Entfernt den Container automatisch, wenn er beendet wird.
-    *   `-it`:  Startet den Container interaktiv.
-    *   `-e DISPLAY=$DISPLAY`: Übergibt die DISPLAY-Variable von deinem Host-System an den Container.  Dies ist wichtig, damit das Spiel auf deinem Bildschirm angezeigt wird.
-    *   `--volume="/tmp/.X11-unix:/tmp/.X11-unix:rw"`:  Mountet den X11-Socket, der für die grafische Anzeige benötigt wird.
-    *   `--device /dev/snd`: Aktiviert Audio.
-    *   `-e PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native`, `-v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native`, `-e ALSA_PCM_NAME=default`:  Weitere Audio-Konfigurationen (können je nach System variieren).
-    *   `--device /dev/dri`: Aktiviert den direkten Rendering Infrastructure (DRI) Zugriff für die Grafikkarte.
-    *   `--group-add video`: Fügt den Container zur `video`-Gruppe hinzu, um Zugriff auf die Grafikkarte zu ermöglichen.
-    *   `-v $(pwd)/0ad-extracted:/game`:  **Wichtig:**  Mountet das extrahierte 0 A.D. Verzeichnis in den `/game`-Ordner im Container.
+(This section should contain detailed instructions on how to use the project, including prerequisites, steps to build the Docker image, and steps to run the container. This guide should be based on the current state of the project.)
 
-    **Sicherheitshinweis (`xhost +local:docker`):**
+## Structure
 
-    Der Befehl `xhost +local:docker` erlaubt es dem Docker-Container, sich mit deinem X-Server zu verbinden.  **Dies kann ein Sicherheitsrisiko darstellen.** Es ist besser, eine restriktivere Regel zu verwenden, wenn möglich.  Alternativ kannst du versuchen, die Berechtigungen für den X-Server anders zu konfigurieren.
+(This section should contain a description of the project structure, including the role of each file and directory.)
 
-## Konfiguration und Mods
+## Contributing
 
-*   **Docker Volumes:** Die Konfiguration und Mods werden in Docker Volumes gespeichert.  Das bedeutet, dass sie persistent sind, auch wenn der Container gestoppt oder entfernt wird.
-*   **Kein Host-Mounting:** Es werden *keine* Host-Verzeichnisse für die Konfiguration oder Mods gemountet.
-*   **Erster Start:** Beim ersten Start des Containers werden die Standardkonfigurationen und Mods in die Volumes kopiert.
-*   **Zugriff auf die Volumes:** Um auf die Konfiguration oder Mods zuzugreifen, musst du in den Container einsteigen:
+(This section should contain instructions on how others can contribute to this project, such as by reporting bugs, submitting pull requests, or donating resources.)
 
-    ```bash
-    docker ps  # Um die Container-ID zu finden
-    docker exec -it <container_id> bash
-    ```
+## License
 
-    Innerhalb des Containers findest du die Konfigurationen unter `/var/0ad/config` und die Mods unter `/var/0ad/mods`. Du kannst diese Dateien mit einem Texteditor bearbeiten.
-
-*   **Docker Volume inspizieren:** Um herauszufinden, wo die Daten der Volumes auf dem Host-System gespeichert sind, verwende den Befehl:
-
-    ```bash
-    docker volume inspect <volume_name>
-    ```
-
-    (Um die Volume-Namen herauszufinden, kannst du `docker volume ls` verwenden.)
-
-## Anpassung
-
-*   **Dockerfile:** Das `Dockerfile` kann angepasst werden, um zusätzliche Pakete zu installieren oder andere Änderungen am Container vorzunehmen.
-*   **`docker-entrypoint.sh`:** Das `docker-entrypoint.sh` Skript kann angepasst werden, um das Spiel mit verschiedenen Parametern zu starten oder andere Aktionen beim Start des Containers auszuführen.
-
-## Bekannte Probleme
-
-*   **Audio:** Die Audio-Konfiguration kann je nach System variieren. Wenn du keinen Ton hast, musst du möglicherweise die Audio-Parameter im `docker run`-Befehl anpassen.
-*   **Performance:** Die Ausführung von 0 A.D. in einem Docker-Container kann etwas langsamer sein als die direkte Ausführung auf dem Host-System.
-
-## Lizenz
-
-Dieses Projekt ist unter der [MIT Lizenz](LICENSE) lizenziert. (Füge eine `LICENSE`-Datei hinzu, wenn du eine Lizenz hinzufügen möchtest).
+(This section should contain the license for the project.)
 ```
 
-**Erklärungen:**
+**Explanation:**
 
-*   **Markdown-Formatierung:** Die Datei ist im Markdown-Format geschrieben, das in Git-Repositories weit verbreitet ist.
-*   **Schritt-für-Schritt-Anleitung:** Die `README.md` enthält eine klare Schritt-für-Schritt-Anleitung, wie man das Dockerfile benutzt.
-*   **Erklärung der Parameter:** Die wichtigsten `docker run`-Parameter werden erklärt.
-*   **Sicherheitshinweise:** Der Sicherheitshinweis zu `xhost` wird hervorgehoben.
-*   **Konfiguration und Mods:** Der Abschnitt über Konfiguration und Mods erklärt, wie die Docker Volumes verwendet werden und wie man auf die Daten zugreifen kann.
-*   **Anpassungsmöglichkeiten:** Die `README.md` weist auf die Möglichkeiten zur Anpassung des Dockerfiles und des `docker-entrypoint.sh` Skripts hin.
-*   **Bekannte Probleme:** Die bekannten Probleme (Audio und Performance) werden erwähnt.
+*   **Clear Goals:** The `README.md` clearly describes the goals of the project and what it aims to achieve.
+*   **Current Status:** The "Current Status" section describes what the project can currently do.
+*   **Future Goals:** The "Future Goals" section provides a vision for the future of the project and what it will accomplish in the future.
+*   **Structure and Contributing:** The "Structure" and "Contributing" sections are placeholders for future information.
 
-Du kannst diese `README.md` verwenden, um anderen zu helfen, dein Projekt zu verstehen und zu verwenden.
+You can use this `README.md` as a starting point and fill it with more detailed instructions and information as the project evolves.
