@@ -5,6 +5,8 @@ ENV INSTALL_DIR="/opt/0ad"
 ENV USER_ID=1000
 ENV GROUP_ID=1000
 ENV USERNAME=0aduser
+ENV CONFIG_VOLUME="0ad-config"
+# Name des Docker Volumes
 
 #1. Aktualisieren und benötigte Pakete installieren.
 RUN apt-get update && apt-get install -y \
@@ -32,14 +34,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certifi
     wget -qO /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-$(dpkg --print-architecture)" && \
     chmod +x /usr/local/bin/gosu
 
-#4. Kopiere das gesamte extrahierte 0 A.D. Verzeichnis.
+#4. Konfigurationsverzeichnis erstellen und Berechtigungen setzen
+RUN mkdir -p /home/$USERNAME/.config/0ad && \
+    chown -R $USERNAME:$USERNAME /home/$USERNAME/.config/0ad
+
+#5. Kopiere das gesamte extrahierte 0 A.D. Verzeichnis.
 COPY 0ad-extracted $INSTALL_DIR
 
 WORKDIR $INSTALL_DIR
 
-#5. Erstelle einen symbolischen Link zur NVIDIA libGL.so
-RUN ln -s /usr/lib/libGL.so /usr/lib/nvidia-libGL.so
-# Link erstellen
-
 #6. Starte das Spiel als der Benutzer 0aduser
-ENTRYPOINT ["gosu", "0aduser", "/opt/0ad/usr/bin/0ad", "-writableRoot"]
+ENTRYPOINT ["gosu", "0aduser", "/opt/0ad/usr/bin/0ad", "-writableRoot", "-config", "/home/0aduser/.config/0ad"]
