@@ -1,5 +1,3 @@
-Okay, here is the `README.md` content in English:
-
 ```markdown
 # Docker 0 A.D. Mod Testbed
 
@@ -25,28 +23,6 @@ The long-term goals of this project are:
 *   **Support for Different 0 A.D. Versions:** To support different 0 A.D. versions, allowing mods to be tested and developed for specific versions of the game.
 *   **User-Friendly Configuration:** To provide an easy way to configure the testing environment, such as through environment variables or configuration files.
 
-## Usage
 
-(This section should contain detailed instructions on how to use the project, including prerequisites, steps to build the Docker image, and steps to run the container. This guide should be based on the current state of the project.)
 
-## Structure
-
-(This section should contain a description of the project structure, including the role of each file and directory.)
-
-## Contributing
-
-(This section should contain instructions on how others can contribute to this project, such as by reporting bugs, submitting pull requests, or donating resources.)
-
-## License
-
-(This section should contain the license for the project.)
 ```
-
-**Explanation:**
-
-*   **Clear Goals:** The `README.md` clearly describes the goals of the project and what it aims to achieve.
-*   **Current Status:** The "Current Status" section describes what the project can currently do.
-*   **Future Goals:** The "Future Goals" section provides a vision for the future of the project and what it will accomplish in the future.
-*   **Structure and Contributing:** The "Structure" and "Contributing" sections are placeholders for future information.
-
-You can use this `README.md` as a starting point and fill it with more detailed instructions and information as the project evolves.
