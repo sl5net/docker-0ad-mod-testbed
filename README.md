@@ -1,9 +1,12 @@
-Okay, here is the `README.md` content in English:
-
 ```markdown
 # Docker 0 A.D. Mod Testbed
 
 This project aims to provide an isolated and reproducible testing environment for developing mods for the open-source real-time strategy game 0 A.D.
+
+`clear; docker build -t 0ad .; ./start_0ad.sh`
+
+`clear; docker build -t 0ad .; echo " ./start_0ad.sh "; ./start_0ad.sh`
+
 
 ## Current Status
 
@@ -41,12 +44,3 @@ The long-term goals of this project are:
 
 (This section should contain the license for the project.)
 ```
-
-**Explanation:**
-
-*   **Clear Goals:** The `README.md` clearly describes the goals of the project and what it aims to achieve.
-*   **Current Status:** The "Current Status" section describes what the project can currently do.
-*   **Future Goals:** The "Future Goals" section provides a vision for the future of the project and what it will accomplish in the future.
-*   **Structure and Contributing:** The "Structure" and "Contributing" sections are placeholders for future information.
-
-You can use this `README.md` as a starting point and fill it with more detailed instructions and information as the project evolves.
