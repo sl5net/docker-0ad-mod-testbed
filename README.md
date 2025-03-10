@@ -47,7 +47,7 @@ This project provides a Dockerized environment for running the open-source real-
 
 5.  **Extract the 0 A.D. AppImage:**
 
-    Download the 0 A.D. AppImage and extract it:
+    Download the 0 A.D. AppImage https://github.com/0ad-matters/0ad-appimage/releases and extract it:
 
     ```bash
     ./0ad-0.27.0-linux-x86_64.AppImage --appimage-extract
@@ -99,3 +99,6 @@ This project provides a Dockerized environment for running the open-source real-
 Contributions are welcome! Please submit pull requests or report any issues you find.
 
 thanks to andy!
+
+@andy5995
+
