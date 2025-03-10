@@ -2,45 +2,30 @@ FROM debian:bookworm
 
 # ENV Variablen für bequemere Konfiguration
 ENV INSTALL_DIR="/game"
-ENV USER_ID=1000
-ENV GROUP_ID=1000
-ENV USERNAME=0aduser
 
 #1. Aktualisieren und benötigte Pakete installieren.
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get remove --purge libsdl2-2.0-0 libsdl2-dev && \
-    apt-get autoremove -y && \
-    apt-get install -y \
-      libasound2 \
-      libdrm2 \
-      libgbm1 \
-      libfreetype6 \
-      libwayland-client0 \
-      libx11-6 \
-      libx11-xcb1 \
-      libgl1 \
-      libopenal1 \
-      libsdl2-2.0-0 \
-      --no-install-recommends
+RUN apt-get update && apt-get install -y \
+  libgl1 \
+  libfreetype6 \
+  libasound2 \
+  libgbm1 \
+  libwayland-client0 \
+  libpulse0 \
+  alsa-utils \
+  --no-install-recommends
 
-#2. Benutzer und Gruppe erstellen, und Benutzer zur Audio Gruppe hinzufügen
-RUN groupadd -g $GROUP_ID $USERNAME && \
-    useradd -u $USER_ID -g $USERNAME -m $USERNAME && \
-    adduser $USERNAME audio
+#2. Benutzer und Gruppe erstellen:
+RUN groupadd -g 1000 0aduser && useradd -u 1000 -g 0aduser -m 0aduser
 
-#3.  Konfigurationsverzeichnis erstellen und Berechtigungen setzen.
-RUN mkdir -p /home/$USERNAME/.config/0ad && \
-    chown -R $USERNAME:$USERNAME /home/$USERNAME/.config/0ad
+#3. Gosu installieren
+RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certificates && \
+    wget -qO /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-$(dpkg --print-architecture)" && \
+    chmod +x /usr/local/bin/gosu
 
-#4. Mods-Verzeichnis erstellen und Berechtigungen setzen.
-RUN mkdir -p /home/$USERNAME/.local/share/0ad/mods && chown -R $USERNAME:$USERNAME /home/$USERNAME/.local/share/0ad/mods
+#4. Kopiere das gesamte extrahierte 0 A.D. Verzeichnis.
+COPY 0ad-extracted $INSTALL_DIR
 
-#5. Volumes definieren (für Konfiguration).
-VOLUME /home/$USERNAME/.config/0ad
-VOLUME /home/$USERNAME/.local/share/0ad/mods
+WORKDIR $INSTALL_DIR
 
-#6. Startskript erstellen
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+#5. Starte das Spiel.
+ENTRYPOINT ["gosu", "0aduser", "/game/usr/bin/0ad", "-writableRoot"]
