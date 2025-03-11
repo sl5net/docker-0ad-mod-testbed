@@ -9,19 +9,18 @@ export SDL_RENDER_DRIVER=opengl
 export NVIDIA_DRIVER_CAPABILITIES=all
 export NVIDIA_VISIBLE_DEVICES=all
 
+# Get the SDDM authentication socket path
+SDDM_AUTH=/tmp/sddm-auth-wf99df98-e035-4217-b998-7ac0cabe77de
+
+
 docker run --rm -it \
     -e DISPLAY="$DISPLAY" \
     -e SDL_VIDEODRIVER="$SDL_VIDEODRIVER" \
     -e SDL_RENDER_DRIVER=opengl \
     -e NVIDIA_DRIVER_CAPABILITIES="$NVIDIA_DRIVER_CAPABILITIES" \
-    -e NVIDIA_VISIBLE_DEVICES="$NVIDIA_VISIBLE_DEVICES" \
+    -e NVIDIA_VISIBLE_DEVICES=all \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-    --device /dev/snd \
-    -e PULSE_SERVER="unix:${XDG_RUNTIME_DIR}/pulse/native" \
-    -v "${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native" \
-    -e ALSA_PCM_NAME=default \
-    --device /dev/dri \
-    --group-add video \
-    --gpus all \
+    --volume="$SDDM_AUTH:/tmp/sddm-auth" \  # Mount the SDDM auth socket
     -v "$(pwd)/0ad-extracted:/game" \
     0ad
+
