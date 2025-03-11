@@ -1,3 +1,5 @@
+**This project is currently on hold. I am not actively working on it due to unresolved issues with X11 forwarding on my system. I may revisit this project in the future, but for now, I am unable to provide updates or support.**
+
 # Docker 0 A.D. Mod Testbed
 
 This project provides a Dockerized environment for running the open-source real-time strategy game 0 A.D., enabling GPU acceleration for improved performance.
