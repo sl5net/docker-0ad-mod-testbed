@@ -1,51 +1,85 @@
-# Use Debian Bookworm as the base image for stability
-FROM debian:bookworm
+# Use Debian Bookworm Slim as base for smaller image size
+FROM debian:bookworm-slim
 
-# Define build arguments for configurable user and group IDs
+# Define build arguments with defaults for customization
 ARG USER_ID=1000
 ARG GROUP_ID=1000
+ARG GAME_VERSION="0.0.26"
+ARG INSTALL_DIR="/game"
+ARG BUILD_DATE
 
-# Set environment variables for easier configuration
-ENV INSTALL_DIR="/game"
-ENV LANG=C.UTF-8
+# Set environment variables for game runtime configuration
+ENV INSTALL_DIR="${INSTALL_DIR}" \
+    LANG="C.UTF-8" \
+    GAME_VERSION="${GAME_VERSION}" \
+    TZ="UTC" \
+    DISPLAY=":0" \
+    PULSE_SERVER="/run/user/1000/pulse/native"
 
-# Install dependencies and Gosu in a single layer to reduce image size
-RUN apt-get update && apt-get install -y \
-    libgl1 \
-    libfreetype6 \
-    libasound2 \
-    libgbm1 \
-    libwayland-client0 \
-    libpulse0 \
-    alsa-utils \
-    wget \
-    ca-certificates \
-    --no-install-recommends && \
-    wget -qO /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-$(dpkg --print-architecture)" && \
-    chmod +x /usr/local/bin/gosu && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install dependencies with version pinning and verify Gosu with SHA256
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1=1.6.* \
+    libfreetype6=2.11.* \
+    libasound2=1.2.* \
+    libgbm1=22.* \
+    libwayland-client0=1.20.* \
+    libpulse0=16.* \
+    alsa-utils=1.2.* \
+    wget=1.21.* \
+    ca-certificates=2023.* \
+    procps=2:3.* \
+    && wget -qO /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-$(dpkg --print-architecture)" \
+    && wget -qO /usr/local/bin/gosu.sha256 "https://github.com/tianon/gosu/releases/download/1.17/gosu-$(dpkg --print-architecture).sha256" \
+    && echo "$(cat /usr/local/bin/gosu.sha256) /usr/local/bin/gosu" | sha256sum -c - \
+    && rm /usr/local/bin/gosu.sha256 \
+    && chmod +x /usr/local/bin/gosu \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create a non-root user and group with configurable IDs
-RUN groupadd -g ${GROUP_ID} 0aduser && useradd -u ${USER_ID} -g 0aduser -m 0aduser
+# Create non-root user and group with specified IDs
+RUN groupadd -g "${GROUP_ID}" 0aduser \
+    && useradd -u "${USER_ID}" -g 0aduser -m -d /home/0aduser -s /bin/bash 0aduser \
+    && mkdir -p "${INSTALL_DIR}" \
+    && chown -R 0aduser:0aduser "${INSTALL_DIR}" /home/0aduser
 
-# Copy the extracted 0 A.D. game files
-COPY 0ad-extracted ${INSTALL_DIR}
+# Copy game files with explicit ownership
+COPY --chown=0aduser:0aduser 0ad-extracted "${INSTALL_DIR}/"
 
-# Set permissions and verify the game binary exists
-RUN chown -R 0aduser:0aduser ${INSTALL_DIR} && \
-    [ -f "${INSTALL_DIR}/usr/bin/0ad" ] || (echo "Game binary not found" && exit 1)
+# Healthcheck to ensure the game process is running
+HEALTHCHECK --interval=30s --timeout=3s \
+    CMD pgrep "0ad" > /dev/null || exit 1
 
-# Set the working directory
-WORKDIR ${INSTALL_DIR}
+# Expose default multiplayer port (configurable via runtime)
+EXPOSE 20595/udp
 
-# Define a volume for persistent save data and user-specific files
-VOLUME ["/home/0aduser/.local/share/0ad/"]
+# Set working directory and define persistent volumes
+WORKDIR "${INSTALL_DIR}"
+VOLUME ["/home/0aduser/.local/share/0ad/", "/home/0aduser/.config/0ad/"]
 
-# Start the game as the non-root user with Gosu
-ENTRYPOINT ["gosu", "0aduser", "/game/usr/bin/0ad", "-writableRoot"]
+# Pre-create config directory with correct permissions
+RUN mkdir -p /home/0aduser/.config/0ad \
+    && chown -R 0aduser:0aduser /home/0aduser/.config
 
-# Add metadata labels for better image documentation
+# Copy default configuration file
+COPY --chown=0aduser:0aduser config/local.cfg /home/0aduser/.config/0ad/config/
+
+# Verify game binary and create flexible entrypoint script
+RUN test -f "${INSTALL_DIR}/usr/bin/0ad" || (echo "Game binary not found" && exit 1) \
+    && echo '#!/bin/bash\n\
+exec gosu 0aduser "${INSTALL_DIR}/usr/bin/0ad" -writableRoot "$@"' > /entrypoint.sh \
+    && chmod +x /entrypoint.sh
+
+# Set entrypoint to custom script for runtime flexibility
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Define default command with common game options
+CMD ["-mod=public", "-conf=setting:value"]
+
+# Add enhanced metadata labels for better documentation
 LABEL maintainer="yourname@example.com" \
-      version="1.0" \
-      description="Docker image for running the 0 A.D. game"
+      org.opencontainers.image.title="0 A.D. Game" \
+      org.opencontainers.image.version="${GAME_VERSION}" \
+      org.opencontainers.image.description="Optimized Docker image for 0 A.D. real-time strategy game" \
+      org.opencontainers.image.source="https://github.com/your/repo" \
+      org.opencontainers.image.licenses="GPL-2.0" \
+      org.opencontainers.image.created="${BUILD_DATE}"
